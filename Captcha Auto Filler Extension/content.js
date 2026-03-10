@@ -114,17 +114,51 @@
   }
 
   // -------------------------
-  // Fill + Enter (Angular-safe)
+  // Fill + Enter (Human-like typing, Angular-safe)
   // -------------------------
   function fillAndSubmit(input, value) {
     input.focus();
-    input.value = value;
+    input.value = ""; // Clear first
 
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.dispatchEvent(new Event("change", { bubbles: true }));
+    const chars = value.split("");
+    let delay = 0;
 
-    clickContinueButton();
-    safeLog("Captcha filled & Enter pressed");
+    chars.forEach((char) => {
+      const randomDelay = delay + Math.floor(Math.random() * 80 + 40); // 40–120ms per char
+
+      setTimeout(() => {
+        // Simulate keydown
+        input.dispatchEvent(new KeyboardEvent("keydown", {
+          key: char, bubbles: true, cancelable: true
+        }));
+
+        // Simulate keypress
+        input.dispatchEvent(new KeyboardEvent("keypress", {
+          key: char, bubbles: true, cancelable: true
+        }));
+
+        // Actually append the character
+        input.value += char;
+
+        // Notify Angular of the value change
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+
+        // Simulate keyup
+        input.dispatchEvent(new KeyboardEvent("keyup", {
+          key: char, bubbles: true, cancelable: true
+        }));
+      }, randomDelay);
+
+      delay += Math.floor(Math.random() * 80 + 40);
+    });
+
+    // Click continue after all characters are typed
+    const totalDelay = delay + 200; // small buffer after last char
+    setTimeout(() => {
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      clickContinueButton();
+      safeLog("Captcha filled & Enter pressed (human-like)");
+    }, totalDelay);
   }
 
   function clickContinueButton() {
