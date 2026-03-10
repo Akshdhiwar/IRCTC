@@ -2,10 +2,12 @@
 const $ = id => document.getElementById(id);
 let ticker = null;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function setStatus(text, dotCls = '') {
-  $('statusText').textContent = text;
+  const el = $('statusText');
+  el.textContent = text;
+  el.className = 'status' + (dotCls === 'armed' ? ' active' : dotCls === 'done' ? ' done' : '');
   $('dot').className = 'dot ' + dotCls;
 }
 
@@ -21,7 +23,7 @@ function startTick(targetMs) {
   if (ticker) clearInterval(ticker);
   ticker = setInterval(() => {
     const left = targetMs - Date.now();
-    $('countdown').textContent = left <= 0 ? '🚀' : fmt(left);
+    $('countdown').textContent = left <= 0 ? '——' : fmt(left);
     if (left <= 0) { clearInterval(ticker); ticker = null; }
   }, 200);
 }
@@ -46,13 +48,13 @@ function applyValues(c) {
 }
 
 function setArmedUI(targetTime) {
-  $('armBtn').disabled = true;
+  $('armBtn').disabled  = true;
   $('stopBtn').disabled = false;
-  setStatus('ARMED — waiting…', 'armed');
+  setStatus('armed — waiting', 'armed');
   startTick(targetTime);
 }
 
-// ── Init ─────────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────────
 
 chrome.storage.local.get(['irctcConfig', 'irctcArmed'], data => {
   if (data.irctcConfig) applyValues(data.irctcConfig);
@@ -68,15 +70,15 @@ $('testInBtn').addEventListener('click', () => {
   const at = new Date(Date.now() + secs * 1000);
   $('clickTime').value =
     `${String(at.getHours()).padStart(2,'0')}:${String(at.getMinutes()).padStart(2,'0')}:${String(at.getSeconds()).padStart(2,'0')}`;
+  setStatus(`fire time set +${secs}s`, '');
 });
 
-// ── Save ─────────────────────────────────────────────────────────────────────
+// ── Save ──────────────────────────────────────────────────────────────────────
 
 $('saveBtn').addEventListener('click', () => {
   chrome.storage.local.set({ irctcConfig: getValues() }, () => {
-    const t = $('toastSaved');
-    t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 2000);
+    setStatus('saved', 'done');
+    setTimeout(() => setStatus('ready', ''), 2000);
   });
 });
 
@@ -84,36 +86,35 @@ $('saveBtn').addEventListener('click', () => {
 
 $('armBtn').addEventListener('click', () => {
   const vals = getValues();
-  if (!vals.clickTime) { setStatus('Set a fire time!', 'error'); return; }
+  if (!vals.clickTime) { setStatus('set a fire time first', 'error'); return; }
 
   const [hh, mm, ss] = vals.clickTime.split(':').map(Number);
   const fireAt = new Date();
   fireAt.setHours(hh, mm, ss || 0, 0);
 
   if (fireAt <= new Date()) {
-    setStatus('⚠ Time already passed — pick a future time', 'error');
+    setStatus('time already passed', 'error');
     return;
   }
 
-  const config = { ...vals };
-  const payload = { active: true, targetTime: fireAt.getTime(), config };
+  const payload = { active: true, targetTime: fireAt.getTime(), config: vals };
 
   chrome.storage.local.set({ irctcConfig: vals, irctcArmed: payload }, () => {
-    chrome.runtime.sendMessage({ type: 'ARM', targetTime: fireAt.getTime(), config }, () => {
+    chrome.runtime.sendMessage({ type: 'ARM', targetTime: fireAt.getTime(), config: vals }, () => {
       setArmedUI(fireAt.getTime());
     });
   });
 });
 
-// ── Stop ─────────────────────────────────────────────────────────────────────
+// ── Stop ──────────────────────────────────────────────────────────────────────
 
 $('stopBtn').addEventListener('click', () => {
   chrome.runtime.sendMessage({ type: 'DISARM' }, () => {
     chrome.storage.local.remove('irctcArmed');
     stopTick();
-    $('armBtn').disabled = false;
+    $('armBtn').disabled  = false;
     $('stopBtn').disabled = true;
-    setStatus('Disarmed', '');
+    setStatus('disarmed', '');
   });
 });
 
@@ -121,17 +122,19 @@ $('stopBtn').addEventListener('click', () => {
 
 chrome.runtime.onMessage.addListener(msg => {
   if (msg.type === 'STATUS') setStatus(msg.text, msg.dot || '');
+
   if (msg.type === 'FIRED') {
     stopTick();
-    $('countdown').textContent = '🚀';
+    $('countdown').textContent = '——';
     $('countdown').style.display = 'block';
-    setStatus('Executing…', 'armed');
+    setStatus('executing…', 'armed');
   }
+
   if (msg.type === 'DONE') {
     stopTick();
-    $('armBtn').disabled = false;
+    $('armBtn').disabled  = false;
     $('stopBtn').disabled = true;
-    setStatus(msg.success ? '✅ Book Now is active!' : '⚠ Done — verify manually', msg.success ? 'done' : '');
+    setStatus(msg.success ? 'book now is active' : 'done — verify manually', msg.success ? 'done' : '');
     chrome.storage.local.remove('irctcArmed');
   }
 });
