@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>IRCTC OCR Logs</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 10px;
+      width: 360px;
+    }
+    h3 {
+      margin: 0 0 10px;
+      text-align: center;
+      color: #38bdf8;
+    }
+    #logs {
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 12px;
+    }
+    .log {
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #334155;
+    }
+    .time {
+      color: #94a3b8;
+    }
+    button {
+      width: 100%;
+      margin-top: 8px;
+      padding: 6px;
+      background: #1e293b;
+      color: #e5e7eb;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h3>IRCTC OCR Logs</h3>
+  <div id="logs"></div>
+  <button id="clear">Clear Logs</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+   "action": {
+      "default_icon": "irct.png",
+      "default_popup": "index.html"
+   },
+   "content_scripts": [ {
+      "all_frames": true,
+      "js": [ "content.js", "payments.js", "autoCnfPayments.js"],
+      "matches": [ "*://www.irctc.co.in/*" ]
+   } ],
+   "description": "Auto-fills IRCTC passenger details for General and Tatkal ticket booking using saved data",
+   "host_permissions": [ "*://www.irctc.co.in/*" ],
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArDXZqC6AMZLzHCfHABfqZOH9wUktffEu3LF+Vnc8aEbaaOyt5riyqjfWjwtM2r5/wMWKOCogHvh45zjU3O9Hy5hztrRohGsQtPCRFHAxqqgFbmjUlTcudFKeQH5Ed/V7jbytGWaZ3Pmt8tDKZrWVBSvQY2kFCktOs3gFaDuxvsyEPQ3e0zp/l4DWL4nrDNC0GgYFCUwyH1PHA+EAKxNfzD35VaD4mLtC/NTdm79ngwX/BvNDDuc0fh8YGk3yjZyIL8323qpaQeys+sDXUtKPNFYsBCqb6PgS6dnUUYfk1J4BR+IUozdxhT68kr6BQEEFftnwvzldGFoDpHZrNm6d9QIDAQAB",
+   "manifest_version": 3,
+   "name": "IRCTC Fast Ticket Booker",
+   "permissions": [ "storage" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.0.3"
+}

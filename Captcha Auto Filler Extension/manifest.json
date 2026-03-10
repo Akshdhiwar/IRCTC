@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "IRCTC Captcha OCR",
+  "version": "3.0",
+  "description": "IRCTC captcha OCR with live debug logs",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.irctc.co.in/*",
+    "http://localhost:8000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.irctc.co.in/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

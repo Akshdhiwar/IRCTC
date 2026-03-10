@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>IRCTC AutoClicker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 280px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #111827;
+      color: #f1f5f9;
+      font-size: 13px;
+    }
+
+    .header {
+      background: #1d4ed8;
+      padding: 11px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header span { font-size: 18px; }
+    .header h1  { font-size: 13px; font-weight: 700; color: #fff; }
+    .header small { font-size: 10px; color: #93c5fd; display: block; }
+
+    .body { padding: 13px; display: flex; flex-direction: column; gap: 10px; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    label { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .4px; }
+
+    input, select {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #f1f5f9;
+      padding: 7px 9px;
+      border-radius: 6px;
+      font-size: 12px;
+      width: 100%;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: #3b82f6; }
+    select option { background: #1e293b; }
+
+    /* Test strip */
+    .test-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 7px 10px;
+    }
+    .test-strip label { color: #38bdf8; white-space: nowrap; margin: 0; }
+    .test-strip input { width: 50px; padding: 4px 6px; text-align: center; }
+    .test-strip button {
+      background: #0369a1; color: #fff; border: none;
+      padding: 5px 10px; border-radius: 5px;
+      font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    .test-strip button:hover { background: #0284c7; }
+
+    hr { border: none; border-top: 1px solid #1e293b; }
+
+    /* Status row */
+    .status {
+      display: flex; align-items: center; gap: 7px;
+      padding: 8px 10px; background: #1e293b; border-radius: 6px;
+      font-size: 11px; color: #94a3b8;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #475569; flex-shrink: 0; }
+    .dot.armed { background: #f59e0b; box-shadow: 0 0 5px #f59e0b; animation: blink 1.2s infinite; }
+    .dot.done  { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+    .dot.error { background: #ef4444; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* Countdown */
+    .countdown {
+      display: none; text-align: center;
+      font-size: 28px; font-weight: 800; color: #f59e0b;
+      letter-spacing: 2px; font-variant-numeric: tabular-nums;
+    }
+
+    /* Buttons */
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+
+    .btn { padding: 9px; border-radius: 6px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-save  { background: #16a34a; color: #fff; }
+    .btn-arm   { background: #2563eb; color: #fff; }
+    .btn-stop  { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .btn:hover:not(:disabled) { filter: brightness(1.1); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Save toast inside popup */
+    .toast-saved {
+      display: none; text-align: center;
+      font-size: 11px; color: #4ade80; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span>🚂</span>
+  <div>
+    <h1>IRCTC AutoClicker</h1>
+    <small>Tatkal Booking Assistant</small>
+  </div>
+</div>
+
+<div class="body">
+
+  <div class="row">
+    <div class="field">
+      <label>Train No.</label>
+      <input id="trainFilter" type="text" placeholder="e.g. 22177"/>
+    </div>
+    <div class="field">
+      <label>Class</label>
+      <select id="classSelect">
+        <option value="SL">Sleeper (SL)</option>
+        <option value="3A" selected>AC 3 Tier (3A)</option>
+        <option value="2A">AC 2 Tier (2A)</option>
+        <option value="1A">AC 1st Class (1A)</option>
+        <option value="CC">Chair Car (CC)</option>
+        <option value="EC">Exec. Chair (EC)</option>
+        <option value="2S">2nd Sitting (2S)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Fire Time (HH:MM:SS)</label>
+    <input id="clickTime" type="time" step="1" value="08:00:00"
+           style="font-size:15px;font-weight:700;letter-spacing:1px;"/>
+  </div>
+
+  <div class="test-strip">
+    <label>🧪 TEST IN</label>
+    <input id="testSeconds" type="number" value="10" min="3" max="300"/>
+    <label style="color:#64748b">sec</label>
+    <button id="testInBtn">Set Time</button>
+  </div>
+
+  <hr/>
+
+  <div class="status">
+    <div class="dot" id="dot"></div>
+    <span id="statusText">Ready — configure and press Arm</span>
+  </div>
+
+  <div class="countdown" id="countdown">00:00:00</div>
+
+  <div class="btn-row">
+    <button class="btn btn-save" id="saveBtn">💾 Save</button>
+    <button class="btn btn-arm"  id="armBtn">⚡ Arm</button>
+    <button class="btn btn-stop" id="stopBtn" disabled>✕ Stop</button>
+  </div>
+
+  <div class="toast-saved" id="toastSaved">✅ Settings saved!</div>
+
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
