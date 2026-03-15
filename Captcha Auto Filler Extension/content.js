@@ -1,6 +1,7 @@
 (function () {
   let lastUrl = location.href;
   let captchaInterval = null;
+  let invalidCheckInterval = null;
   let isRunning = false;
 
   safeLog("Content script loaded");
@@ -30,9 +31,9 @@
   // SAFE starter (no duplicates)
   // -------------------------
   function startCaptchaFlow() {
-    if (isRunning) {
-      safeLog("Captcha flow already running");
-      return;
+    if (invalidCheckInterval) {
+      clearInterval(invalidCheckInterval);
+      invalidCheckInterval = null;
     }
     isRunning = true;
     waitForCaptcha();
@@ -184,6 +185,17 @@
     btn.dispatchEvent(
       new MouseEvent("click", { bubbles: true })
     );
+
+    // Continuously check for invalid captcha
+    if (invalidCheckInterval) clearInterval(invalidCheckInterval);
+    invalidCheckInterval = setInterval(() => {
+      if (document.body.textContent.includes("Invalid Captcha")) {
+        clearInterval(invalidCheckInterval);
+        invalidCheckInterval = null;
+        safeLog("Invalid Captcha detected, retrying");
+        startCaptchaFlow();
+      }
+    }, 500);
   }
 
   // -------------------------
